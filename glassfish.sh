@@ -1,21 +1,24 @@
 #!/bin/bash
 DIR=$PWD
 systemctl stop glassfish
+yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-devel jq ImageMagick
 # DOWNLOAD DEPENDENCIA GLASSFISH SERVER
 glassfish="/tmp/glassfish-4.1.zip"
 link=https://dlc-cdn.sun.com/glassfish/4.1/release/glassfish-4.1.zip
 cd /tmp/
-if [ -f "$glassfish" ]
-then
-    ls $glassfish
-    md5sum $glassfish
-else
-    wget $link
-fi
 rm -rf glassfish-4.1
-unzip glassfish-4.1.zip
-# INSTALA DEPENDENCIA GLASSFISH SERVER EM /usr/local
 rm -rf /usr/local/glassfish4
+if [ -f "$glassfish" ]; then
+    ls $glassfish
+    if [ "$(md5sum $glassfish)" == "2fd41ad9af8d41d1c721c1b25191f674  /tmp/glassfish-4.1.zip" ]; then
+        unzip glassfish-4.1.zip
+    else
+        rm $glassfish
+        wget $link
+        unzip glassfish-4.1.zip
+    fi
+fi
+# INSTALA DEPENDENCIA GLASSFISH SERVER EM /usr/local
 mv glassfish4 /usr/local/
 # ADICIONA USUARIO 
 cd /usr/local/glassfish4/glassfish/modules
@@ -40,10 +43,10 @@ chown -R glassfish:glassfish /usr/local/glassfish4/glassfish/domains/domain1
 rm -f /usr/lib/systemd/system/glassfish.service
 cp $DIR/glassfish.service /usr/lib/systemd/system/
 systemctl daemon-reload
-echo "Starting glassfish!"
-systemctl start glassfish
-systemctl enable glassfish
-# STATUS DO SERVICO GLASSFISH
-systemctl status glassfish
 echo "GLASSFISH_DIRECTORY	/usr/local/glassfish4" >> default.config
 echo "GLASSFISH_USER	glassfish" >> default.config
+echo "Starting glassfish!"
+systemctl enable glassfish
+systemctl start glassfish
+# STATUS DO SERVICO GLASSFISH
+systemctl status glassfish
